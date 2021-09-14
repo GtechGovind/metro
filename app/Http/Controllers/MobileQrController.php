@@ -14,22 +14,24 @@ class MobileQrController extends Controller
     public function createNewQr(Request $request)
     {
         $QrResponse = $this->issueToken($request);
+        $qrResponse = json_decode($QrResponse);
         $requestBody = json_decode($request->getContent());
 
-        if ($QrResponse->status == "OK") {
+        if ($qrResponse->status == "OK") {
 
-            foreach ($QrResponse->data->trips as $trip) {
+            foreach ($qrResponse->data->trips as $trip) {
                 $qr = new MobileQr();
-                $qr->crateMobileQr($request, $QrResponse->data->masterTxnId, $trip);
+                $qr->crateMobileQr($request, $qrResponse->data->masterTxnId, $trip);
             }
 
             //UPDATE ORDER STATUS AND MASTER
             $order = new SaleOrder();
             $order->updateOrderStatus(env("STATUS_ORDER_QR_GENERATED"), $requestBody->data->operatorTransactionId);
-            $order->updateOrderMaster($QrResponse->data->masterTxnId, $requestBody->data->operatorTransactionId);
+            $order->updateOrderMaster($qrResponse->data->masterTxnId, $requestBody->data->operatorTransactionId);
 
-            $QrResponse['order_no'] = $requestBody->data->operatorTransactionId;
-            return json_encode($QrResponse);
+            $qrNewResponse = json_decode($QrResponse, true);
+            $qrNewResponse['order_no'] = $requestBody->data->operatorTransactionId;
+            return json_encode($qrNewResponse);
 
         } else return json_encode($QrResponse);
 
@@ -42,7 +44,7 @@ class MobileQrController extends Controller
         $QrData = $Qr -> getActiveQr($request);
 
         if (empty($QrData)) return response() -> json(['status' => false, 'code' => env("STATUS_NO_QR_CODE_FOUND"), 'error' => 'No Qrs found']);
-        else return response() -> json(['status' => true, 'code' => env('status_qr_code_fetched_successfully'), 'qrs' => $QrData]);
+        else return response() -> json(['status' => true, 'code' => env('STATUS_QR_CODE_FETCHED_SUCCESSFULLY'), 'qrs' => $QrData]);
 
     }
 
@@ -112,7 +114,7 @@ class MobileQrController extends Controller
 
         $response = curl_exec($curl);
         curl_close($curl);
-        return json_decode($response, true);
+        return $response;
     }
 
     // GET TOKEN STATUS

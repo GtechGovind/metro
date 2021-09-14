@@ -32,7 +32,7 @@ Route::post('qr', [MobileQrController::class, 'getQrData']);
 Route::post('pass/new', [PassController::class, 'createNewPass']);
 Route::post('pass', [PassController::class, 'getUserPassWithStatus']);
 Route::post('pass/trip/new', [PassController::class, 'generateNewTrip']);
-Route::post('pass/reload', [PassController::class, 'reloadPass']);
+Route::post('pass/reload', [PassController::class, 'reloadOldPass']);
 
 // REFUND
 Route::post('refund', [RefundController::class, 'getRefund']);

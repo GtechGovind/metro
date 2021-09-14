@@ -74,7 +74,7 @@ class SaleOrder extends Model
         return DB::table('sale_orders')
             ->where('order_no', '=', $order_no)
             ->update([
-                'master_qr_code' => $masterTrxId
+                'masterTxnId' => $masterTrxId
             ]);
     }
 

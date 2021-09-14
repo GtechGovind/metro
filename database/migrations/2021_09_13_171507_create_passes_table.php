@@ -25,7 +25,7 @@ class CreatePassesTable extends Migration
             $table->double('balance');
             $table->integer('trips')->nullable();
             $table->integer('operator_id');
-            $table->boolean('pass_status');
+            $table->integer('pass_status');
             $table->dateTime('travel_date');
             $table->dateTime('master_expiry');
             $table->dateTime('grace_expiry');

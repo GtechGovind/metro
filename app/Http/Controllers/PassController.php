@@ -41,10 +41,10 @@ class PassController extends Controller
 
         if (empty($isPassExist)) return response()->json(["status" => false, "code" => env('STATUS_NO_PASS_FOUND'), "error" => "User have no active Pass!"]);
         else {
-            $passData = $this->passStatus($isPassExist->master_qr_code);
+            $passData = $this->passStatus($isPassExist->masterTxnId);
             $newPassData = json_decode($passData, true);
             $newPassData['data']['order_no'] = $isPassExist->order_no;
-            return response()->json(['status' => true, 'code' => env('STATUS_PASS_FETCHED_SUCCESSFULLY'), 'data' => $newPassData->data]);
+            return response()->json(['status' => true, 'code' => env('STATUS_PASS_FETCHED_SUCCESSFULLY'), 'data' => json_decode(json_encode($newPassData))->data]);
         }
 
     }
@@ -79,7 +79,8 @@ class PassController extends Controller
         if ($ReloadPass->status == "OK") {
 
             $Pass = new Pass();
-            $Pass->updatePass($ReloadPass);
+            $Pass->cancelPass($ReloadPass);
+            $Pass -> createPass($request, $ReloadPass);
 
             return json_encode($ReloadPass);
 
@@ -95,9 +96,6 @@ class PassController extends Controller
         $BASE_URL = env("MMOPL_BASE_API_URL");
         $AUTHORIZATION = env("MMOPL_BASE_AUTH_KEY");
         $requestBody = json_decode($request->getContent());
-
-        $source = ($requestBody->data->source != null) ? $requestBody->data->source : null;
-        $destination = ($requestBody->data->destination != null) ? $requestBody->data->destination : null;
 
         $curl = curl_init();
         curl_setopt_array($curl, [
@@ -116,8 +114,8 @@ class PassController extends Controller
                     "qrType"                : "' . $requestBody->data->qrType . '",
                     "tokenType"             : "' . $requestBody->data->tokenType . '",
                     "operationTypeId"       : "' . $requestBody->data->operationTypeId . '",
-                    "source"                : "' . $source . '",
-                    "destination"           : "' . $destination . '",
+                    "source"                : "' . $requestBody->data->source . '",
+                    "destination"           : "' . $requestBody->data->destination . '",
                     "operatorId"            : "' . $requestBody->data->operatorId . '",
                     "name"                  : "' . $requestBody->data->name . '",
                     "email"                 : "' . $requestBody->data->email . '",
@@ -139,7 +137,7 @@ class PassController extends Controller
         $response = curl_exec($curl);
 
         curl_close($curl);
-        return json_decode($response, true);
+        return json_decode($response);
     }
 
     // ISSUE NEW TRIP
@@ -147,6 +145,7 @@ class PassController extends Controller
     {
         $BASE_URL = env("MMOPL_BASE_API_URL");
         $AUTHORIZATION = env("MMOPL_BASE_AUTH_KEY");
+        $requestBody = json_decode($request->getContent());
 
         $curl = curl_init();
 
@@ -161,14 +160,14 @@ class PassController extends Controller
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => '{
                 "data": {
-                    "tokenType"             : "' . $request->input('tokenType') . '",
-                    "operationTypeId"       : "' . $request->input('operationTypeId') . '",
-                    "operatorId"            : "' . $request->input('operatorId') . '",
-                    "name"                  : "' . $request->input('name') . '",
-                    "email"                 : "' . $request->input('email') . '",
-                    "mobile"                : "' . $request->input('mobile') . '",
-                    "activationTime"        : "' . $request->input('activationTime') . '",
-                    "masterTxnId"           : "' . $request->input('masterTxnId') . '"
+                    "tokenType"             : "' . $requestBody -> data -> tokenType . '",
+                    "operationTypeId"       : "' . $requestBody -> data -> operationTypeId . '",
+                    "operatorId"            : "' . $requestBody -> data -> operatorId . '",
+                    "name"                  : "' . $requestBody -> data -> name . '",
+                    "email"                 : "' . $requestBody -> data -> email . '",
+                    "mobile"                : "' . $requestBody -> data -> mobile . '",
+                    "activationTime"        : "' . $requestBody -> data -> activationTime . '",
+                    "masterTxnId"           : "' . $requestBody -> data -> masterTxnId . '"
                 }
             }',
             CURLOPT_HTTPHEADER => array(
@@ -211,7 +210,7 @@ class PassController extends Controller
         $Pass = new Pass();
         $Pass->updatePass($Response);
 
-        return $Response;
+        return $response;
 
     }
 
@@ -223,9 +222,6 @@ class PassController extends Controller
 
         $BASE_URL = env("MMOPL_BASE_API_URL");
         $AUTHORIZATION = env("MMOPL_BASE_AUTH_KEY");
-
-        $source = ($requestBody->data->source != null) ? $requestBody->data->source : null;
-        $destination = ($requestBody->data->destination != null) ? $requestBody->data->destination : null;
 
         $curl = curl_init();
 
@@ -241,8 +237,8 @@ class PassController extends Controller
             CURLOPT_POSTFIELDS => '{
                 "data": {
                     "fare"                  : "' . $requestBody->data->fare . '",
-                    "source"                : "' . $source . '",
-                    "destination"           : "' . $destination . '",
+                    "source"                : "' . $requestBody->data->source . '",
+                    "destination"           : "' . $requestBody->data->destination . '",
                     "tokenType"             : "' . $requestBody->data->tokenType . '",
                     "operationTypeId"       : "' . $requestBody->data->operationTypeId . '",
                     "operatorId"            : "' . $requestBody->data->operatorId . '",
@@ -259,16 +255,16 @@ class PassController extends Controller
                     "pgId"                  : "' . $requestBody->payment->pgId . '"
                 }
             }',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 "Authorization: $AUTHORIZATION",
                 'Content-Type: application/json',
-            ),
+            ],
         ));
 
         $response = curl_exec($curl);
 
         curl_close($curl);
-        return json_decode($response, true);
+        return json_decode($response);
 
     }
 

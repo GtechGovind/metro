@@ -16,7 +16,7 @@ class Pass extends Model
     {
         return DB::table('passes')
             ->where('number', '=', $number)
-            ->where('pass_status', '=', 1)
+            ->where('pass_status', '=', env('STATUS_PASS_GENERATED'))
             ->where('pass_type', '=', $pass_type)
             ->first();
     }
@@ -25,20 +25,20 @@ class Pass extends Model
     public function createPass(Request $request, $response)
     {
         $requestBody = json_decode($request->getContent());
-        $isPassExist = $this->isPassExist($requestBody->data->number, $response->data->tokenType);
+        $isPassExist = $this->isPassExist($requestBody->data->mobile, $response->data->tokenType);
 
         if (empty($isPassExist)) {
 
-            return DB::table('s_passes')
+            return DB::table('passes')
                 ->insert([
 
                     'order_no' => $requestBody->data->operatorTransactionId,
                     'masterTxnId' => $response->data->masterTxnId,
                     'pass_type' => $response->data->tokenType,
-                    'number' => $requestBody->data->number,
+                    'number' => $requestBody->data->mobile,
                     'price' => $response->data->amount,
-                    'source' => $response->data->source,
-                    'destination' => $response->data->destination,
+                    'source' => $requestBody->data->source,
+                    'destination' => $requestBody->data->destination,
                     'balance' => $response->data->balance,
                     'trips' => $response->data->balanceTrip,
                     'operator_id' => $requestBody->data->operatorId,
@@ -57,10 +57,24 @@ class Pass extends Model
     public function updatePass($response): int
     {
         return DB::table('passes')
-            ->where('masterTxnId', '=', $response -> data -> masterTxnId)
+            ->where('masterTxnId', '=', $response->data->masterTxnId)
             ->update([
-                'balance' => $response -> data -> balance,
-                'trips' => $response->data->balanceTrip
+                'price' => $response->data->amount,
+                'balance' => $response->data->balance,
+                'trips' => $response->data->balanceTrip,
+                'travel_date' => date('y-m-d h:i:m', $response->data->travelDate),
+                'master_expiry' => date('y-m-d h:i:m', $response->data->masterExpiry),
+                'grace_expiry' => date('y-m-d h:i:m', $response->data->graceExpiry)
+            ]);
+    }
+
+    // CANCEL THE PASS
+    public function cancelPass($response): int
+    {
+        return DB::table('passes')
+            ->where('masterTxnId', '=', $response->data->masterTxnId)
+            ->update([
+                'pass_status' => env('STATUS_PASS_CANCELLED')
             ]);
     }
 

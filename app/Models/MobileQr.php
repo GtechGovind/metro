@@ -17,15 +17,12 @@ class MobileQr extends Model
     {
         $requestBody = json_decode($request->getContent());
 
-        $source = ($requestBody->data->source != null) ? $requestBody->data->source : null;
-        $destination = ($requestBody->data->destination != null) ? $requestBody->data->destination : null;
-
         DB::table('mobile_qrs')
             ->insert([
                 'order_no' => $requestBody->data->operatorTransactionId,
                 'number' => $requestBody->data->mobile,
-                'source' => $source,
-                'destination' => $destination,
+                'source' => $requestBody->data->source,
+                'destination' => $requestBody->data->destination,
                 'type' => $requestBody->data->tokenType,
                 'masterTxnId' => $masterTrxId,
                 'slave_qr_code' => $qr->qrCodeId,
