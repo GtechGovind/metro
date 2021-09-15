@@ -78,4 +78,14 @@ class Pass extends Model
             ]);
     }
 
+    // CANCEL THE PASS
+    public function refundPass($response): int
+    {
+        return DB::table('passes')
+            ->where('masterTxnId', '=', $response->masterTxnId)
+            ->update([
+                'pass_status' => env('STATUS_PASS_CANCELLED')
+            ]);
+    }
+
 }

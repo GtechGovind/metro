@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pass;
 use App\Models\RefundOrder;
 use App\Models\SaleOrder;
 use Illuminate\Http\Request;
@@ -18,6 +19,11 @@ class RefundController extends Controller
 
             $saleOrder = new SaleOrder();
             $saleOrder->updateOrderStatus(env("STATUS_ORDER_REFUNDED"), $requestBody->data->operatorTransactionId);
+
+            if ($Refund->data->tokenType == 81 || $Refund->data->tokenType == 21) {
+                $Pass = new Pass();
+                $Pass -> refundPass($Refund);
+            }
 
             $refundOrder = new RefundOrder();
             $refundOrder->createRefundOrder($request, $Refund);
@@ -38,9 +44,6 @@ class RefundController extends Controller
 
         $requestBody = json_decode($request->getContent());
 
-        $source = ($requestBody->data->source != null) ? $requestBody->data->source : null;
-        $destination = ($requestBody->data->destination != null) ? $requestBody->data->destination : null;
-
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => "$BASE_URL/qrcode/refund",
@@ -57,8 +60,8 @@ class RefundController extends Controller
                     "supportType"                   : "' . $requestBody->data->supportType . '",
                     "qrType"                        : "' . $requestBody->data->qrType . '",
                     "tokenType"                     : "' . $requestBody->data->tokenType . '",
-                    "source"                        : "' . $source . '",
-                    "destination"                   : "' . $destination . '",
+                    "source"                        : "' . $requestBody->data->source . '",
+                    "destination"                   : "' . $requestBody->data->destination . '",
                     "remainingBalance"              : "' . $requestBody->data->remainingBalance . '",
                     "details": {
                         "registration": {

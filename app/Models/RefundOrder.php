@@ -17,10 +17,10 @@ class RefundOrder extends Model
 
         return DB::table('refund_orders')
             ->insert([
-                'refund_order_no'   => $requestBody -> refund_order_no,
+                'refund_order_no'   => $requestBody -> data -> refund_order_no,
                 'order_no'          => $requestBody -> data -> operatorTransactionId,
-                'master_qr_code'    => $requestBody -> data -> masterTxnId,
-                'number'            => $requestBody -> number,
+                'masterTxnId'       => $requestBody -> data -> masterTxnId,
+                'number'            => $requestBody -> data -> number,
                 'refund_charges'    => $refund -> data -> details -> pass -> processingFeeAmount,
                 'refund_amount'     => $refund -> data -> details -> pass -> refundAmount,
                 'pg_id'             => $requestBody -> data -> pgId,

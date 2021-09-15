@@ -224,7 +224,6 @@ class PassController extends Controller
         $AUTHORIZATION = env("MMOPL_BASE_AUTH_KEY");
 
         $curl = curl_init();
-
         curl_setopt_array($curl, array(
             CURLOPT_URL => "$BASE_URL/qrcode/reloadPass",
             CURLOPT_RETURNTRANSFER => true,
@@ -237,8 +236,6 @@ class PassController extends Controller
             CURLOPT_POSTFIELDS => '{
                 "data": {
                     "fare"                  : "' . $requestBody->data->fare . '",
-                    "source"                : "' . $requestBody->data->source . '",
-                    "destination"           : "' . $requestBody->data->destination . '",
                     "tokenType"             : "' . $requestBody->data->tokenType . '",
                     "operationTypeId"       : "' . $requestBody->data->operationTypeId . '",
                     "operatorId"            : "' . $requestBody->data->operatorId . '",
